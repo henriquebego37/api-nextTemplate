@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model perfil {
+  id        Int      @id @default(autoincrement())
+  telefone  String   @db.VarChar(50)
+  email     String   @db.VarChar(150)
+  nome      String   @db.VarChar(200)
+  endereco  String   @db.VarChar(300)
+  idusuario Int
+  usuarios  usuarios @relation(fields: [idusuario], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_idusuario")
+
+  @@index([idusuario], map: "fk_idusuario_idx")
+}
+
+model produtos {
+  id                  Int                   @id @default(autoincrement())
+  tipo                String                @db.VarChar(100)
+  sabor               String                @db.VarChar(100)
+  thumb               String                @db.LongText
+  nome                String                @db.VarChar(100)
+  codigo              Int
+  sorveterias_estoque sorveterias_estoque[]
+}
+
+model sorveterias {
+  id                  Int                   @id @default(autoincrement())
+  idusuario           Int?
+  codigo              Int
+  responsavel         String                @db.VarChar(100)
+  endereco            String                @db.VarChar(300)
+  cidade              String                @db.VarChar(100)
+  telefone            String                @db.VarChar(20)
+  thumb               String                @db.LongText
+  ativo               Int
+  usuarios            usuarios?             @relation(fields: [idusuario], references: [id], onUpdate: NoAction, map: "fk_idusuario_sorveteria")
+  sorveterias_estoque sorveterias_estoque[]
+
+  @@index([idusuario], map: "fk_idusuario_idx")
+}
+
+model sorveterias_estoque {
+  id           Int         @id @default(autoincrement())
+  idsorveteria Int
+  idprodutos   Int
+  quantidade   Int
+  dataRegistro DateTime    @default(now()) @db.DateTime(0)
+  produtos     produtos    @relation(fields: [idprodutos], references: [id], onDelete: Cascade, map: "fk_idprodutos")
+  sorveterias  sorveterias @relation(fields: [idsorveteria], references: [id], onDelete: Cascade, map: "fk_idsorveteria")
+
+  @@index([idprodutos], map: "fk_idprodutos_idx")
+  @@index([idsorveteria], map: "fk_idsorveteria_idx")
+}
+
+model usuarios {
+  id          Int           @id @default(autoincrement())
+  login       String        @unique(map: "login_UNIQUE") @db.VarChar(45)
+  senha       String        @db.VarChar(150)
+  tipo        Int
+  perfil      perfil[]
+  sorveterias sorveterias[]
+}
